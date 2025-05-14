@@ -39,7 +39,7 @@ def views_main(date: str) -> str:
         "stock_prices": stock_prices,
     }
 
-df.fillna()
+    df.fillna()
 
     parsed_result = json.dumps(result, ensure_ascii=False)
 

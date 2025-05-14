@@ -26,13 +26,13 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
         else:
             stop_date = datetime.strptime(date, "%d.%m.%Y")
 
-        logger.info('Определение даты, начиная с которой будут взяты операции для подсчета трат по категориям')
+        logger.info("Определение даты, начиная с которой будут взяты операции для подсчета трат по категориям")
 
         start_date = stop_date - pd.Timedelta(days=90)
 
-        logger.info('Проверка на наличие необходимых столбцов в датафрейм')
+        logger.info("Проверка на наличие необходимых столбцов в датафрейм")
 
-        required_columns = ['Дата платежа', 'Категория', 'Сумма операции']
+        required_columns = ["Дата платежа", "Категория", "Сумма операции"]
         for column in required_columns:
 
             if column not in transactions.columns:
@@ -40,27 +40,24 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
 
                 return pd.DataFrame()
 
-        logger.info('Преобразование дат операций в объект datatime')
+        logger.info("Преобразование дат операций в объект datatime")
 
         transactions["Дата платежа"] = pd.to_datetime(transactions["Дата платежа"], format="%d.%m.%Y")
 
-        logger.info('Формирование списка операций для формирования отчета')
+        logger.info("Формирование списка операций для формирования отчета")
 
         filtered_transactions = transactions[
-            (transactions["Дата платежа"] >= start_date) &
-            (transactions["Дата платежа"] <= stop_date) &
-            (transactions["Категория"] == category) &
-            (transactions["Сумма операции"] < 0)
-            ]
+            (transactions["Дата платежа"] >= start_date)
+            & (transactions["Дата платежа"] <= stop_date)
+            & (transactions["Категория"] == category)
+            & (transactions["Сумма операции"] < 0)
+        ]
 
-        logger.info('Инициализация отчета')
+        logger.info("Инициализация отчета")
 
         total_spending = filtered_transactions["Сумма операции"].abs().sum()
 
-        result = pd.DataFrame({
-            "Категория": [category],
-            "Сумма трат": [total_spending]
-        })
+        result = pd.DataFrame({"Категория": [category], "Сумма трат": [total_spending]})
 
     except ValueError as ve:
         logger.error(f"Ошибка значения: {ve}")
