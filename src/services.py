@@ -2,6 +2,7 @@ import json
 import logging
 import re
 from datetime import datetime
+from typing import Any, Dict, List
 
 from logging_config import setup_logging
 
@@ -9,7 +10,7 @@ setup_logging()
 logger = logging.getLogger("my_log")
 
 
-def get_profitable_cashback_categories(data: list, year: str, month: str) -> str:
+def get_profitable_cashback_categories(data: List[Dict[str, Any]], year: str, month: str) -> str:
     """
     На вход функции поступают данные для анализа, год и месяц.
     На выходе — JSON с анализом, сколько на каждой категории можно заработать кешбэка в указанном месяце года,
@@ -18,8 +19,8 @@ def get_profitable_cashback_categories(data: list, year: str, month: str) -> str
     "Категория 2": 2000,
     "Категория 3": 500}
     """
-    filtered_data = []
-    result = {}
+    filtered_data: List[Dict[str, Any]] = []
+    result: Dict[str, float] = {}
 
     pattern_year = re.compile(r"\d{4}")
     pattern_month = re.compile(r"\d{2}")
@@ -28,7 +29,6 @@ def get_profitable_cashback_categories(data: list, year: str, month: str) -> str
 
     if isinstance(data, list) and pattern_year.fullmatch(year) and pattern_month.fullmatch(month):
         if data and 12 >= int(month) > 0:
-
             for x in data:
                 date_obj = datetime.strptime(x["Дата операции"], "%d.%m.%Y %H:%M:%S")
                 year_part = date_obj.strftime("%Y")
@@ -37,21 +37,19 @@ def get_profitable_cashback_categories(data: list, year: str, month: str) -> str
                 logger.info("Проверка операции на совпадение месяца и года для поиска")
 
                 if year_part == year and month_part == month:
-
                     logger.info("Добавление подходящих операций в новый список")
 
                     filtered_data.append(x)
                     category = x["Категория"]
                     amount = x["Сумма операции"]
 
-                    if category not in result and amount < 0:
-                        if category != "Переводы":
+                    if isinstance(amount, (int, float)) and amount < 0 and category != "Переводы":
+                        if category not in result:
                             result[category] = 0.0
 
-                            logger.info("Формирование результата с категориями и подсчет кэшбека")
+                        logger.info("Формирование результата с категориями и подсчет кэшбека")
 
-                            result[category] += abs(amount * 0.01)
-
+                        result[category] += abs(amount * 0.01)
                 else:
                     logger.warning("Дата операции отличается от запроса")
 

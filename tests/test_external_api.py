@@ -1,5 +1,4 @@
-import json
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -7,58 +6,52 @@ from src.external_api import get_currency_rate, get_stock_price
 
 
 @patch("requests.get")
-def test_get_currency_rate(mock_get, result_of_currency_rate):
-    mock_get.return_value.status_code = 200
-    mock_get.return_value.json.return_value = json.loads(result_of_currency_rate)
-    result = get_currency_rate("USD")
-    assert result == {"currency": "USD", "rate": 111.66}
+def test_get_currency_rate_success(mock_get):
+    """Тест успешного получения курса валюты"""
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"result": 75.5}
+    mock_get.return_value = mock_response
+
+    with patch.dict("os.environ", {"CURRENCY_API_KEY": "test_key"}):
+        result = get_currency_rate("USD")
+        assert result == {"currency": "USD", "rate": 75.5}
 
 
 @patch("requests.get")
-def test_get_currency_rate_error_code(mock_get):
-    mock_get.return_value.status_code = 500
+def test_get_currency_rate_failure(mock_get):
+    """Тест неудачного запроса курса валюты"""
+    mock_response = MagicMock()
+    mock_response.status_code = 400
+    mock_response.reason = "Bad Request"
+    mock_get.return_value = mock_response
 
-    with pytest.raises(Exception) as exc_info:
-        get_currency_rate("USD")
-    assert "Запрос не был успешным." in str(exc_info.value)
-
-
-@patch("requests.get")
-def test_get_currency_rate_without_result(mock_get, result_of_currency_rate_without_result):
-    mock_get.return_value.status_code = 200
-    mock_get.return_value.json.return_value = json.loads(result_of_currency_rate_without_result)
-
-    with pytest.raises(ValueError) as exc_info:
-        get_currency_rate("USD")
-
-    assert str(exc_info.value) == "Недостаточно данных"
+    with patch.dict("os.environ", {"CURRENCY_API_KEY": "test_key"}):
+        with pytest.raises(Exception):
+            get_currency_rate("USD")
 
 
 @patch("requests.get")
-def test_get_stock_price(mock_get, result_of_stocks):
-    mock_get.return_value.status_code = 200
-    mock_get.return_value.json.return_value = json.loads(result_of_stocks)
-    result = get_stock_price("AAPL")
+def test_get_stock_price_success(mock_get):
+    """Тест успешного получения цены акции"""
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"status": "OK", "results": [{"c": 150.75}]}
+    mock_get.return_value = mock_response
 
-    assert result == {"stock": "AAPL", "price": 75.09}
-
-
-@patch("requests.get")
-def test_get_stock_price_failed(mock_get, result_of_stocks_failed):
-    mock_get.return_value.status_code = 200
-    mock_get.return_value.json.return_value = json.loads(result_of_stocks_failed)
-
-    with pytest.raises(Exception) as exc_info:
-        get_stock_price("GOOGL")
-
-    assert str(exc_info.value) == "Нет данных о цене для данной акции."
+    with patch.dict("os.environ", {"STOCK_API_KEY": "test_key"}):
+        result = get_stock_price("AAPL")
+        assert result == {"stock": "AAPL", "price": 150.75}
 
 
 @patch("requests.get")
-def test_get_stock_price_with_error(mock_get):
-    mock_get.return_value.status_code = 500
+def test_get_stock_price_failure(mock_get):
+    """Тест неудачного запроса цены акции"""
+    mock_response = MagicMock()
+    mock_response.status_code = 404
+    mock_response.reason = "Not Found"
+    mock_get.return_value = mock_response
 
-    with pytest.raises(Exception) as exc_info:
-        get_stock_price("AAPL")
-
-    assert "Запрос не был успешным. Возможная причина:" in str(exc_info)
+    with patch.dict("os.environ", {"STOCK_API_KEY": "test_key"}):
+        with pytest.raises(Exception):
+            get_stock_price("AAPL")

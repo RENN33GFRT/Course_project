@@ -1,7 +1,7 @@
 import logging
 import os
 from datetime import datetime, timedelta
-from typing import Dict, Union
+from typing import Any, Dict, Union
 
 import requests
 from dotenv import load_dotenv
@@ -12,8 +12,8 @@ setup_logging()
 logger = logging.getLogger("my_log")
 
 load_dotenv()
-CURRENCY_API_KEY = os.getenv("CURRENCY_API_KEY")
-STOCK_API_KEY = os.getenv("STOCK_API_KEY")
+CURRENCY_API_KEY: str = os.getenv("CURRENCY_API_KEY", "")
+STOCK_API_KEY: str = os.getenv("STOCK_API_KEY", "")
 
 
 def get_currency_rate(currency: str, amount: int = 1) -> Dict[str, Union[str, float]]:
@@ -32,34 +32,24 @@ def get_currency_rate(currency: str, amount: int = 1) -> Dict[str, Union[str, fl
     logger.info("Проверяем статус код")
 
     if status_code == 200:
-
         logger.info("Статус код 200. Запрос выполнен успешно.")
         logger.info("Преобразование ответа в формат JSON")
 
-        content = response.json()
+        content: Dict[str, Any] = response.json()
 
         logger.info("Проверка на наличие необходимого ключа в ответе")
 
-        if content["result"]:
-
+        if content.get("result"):
             logger.info("Необходимый ключ найден")
             logger.info("Получение результата и запись в словарь")
 
-            result = {"currency": currency, "rate": round(content["result"], 2)}
+            return {"currency": currency, "rate": round(content["result"], 2)}
 
-            return result
+        logger.error("Необходимый ключ не найден")
+        raise ValueError("Недостаточно данных")
 
-        else:
-
-            logger.error("Необходимый ключ не найден")
-
-            raise ValueError("Недостаточно данных")
-
-    else:
-
-        logger.error(f"Статус код не равен 200. Возможная ошибка: {response.reason}")
-
-        raise Exception(f"Запрос не был успешным. Возможная причина: {response.reason}")
+    logger.error(f"Статус код не равен 200. Возможная ошибка: {response.reason}")
+    raise Exception(f"Запрос не был успешным. Возможная причина: {response.reason}")
 
 
 def get_stock_price(stock: str) -> Dict[str, Union[str, float]]:
@@ -78,37 +68,26 @@ def get_stock_price(stock: str) -> Dict[str, Union[str, float]]:
     url = f"https://api.polygon.io/v2/aggs/ticker/{stock}/range/1/day/{start_date}/{stop_date}?apiKey={STOCK_API_KEY}"
 
     response = requests.get(url, headers=headers)
-
     status_code = response.status_code
 
     logger.info("Проверяем статус код")
 
     if status_code == 200:
-
         logger.info("Статус код 200. Запрос выполнен успешно.")
         logger.info("Преобразование ответа в формат JSON")
 
-        content = response.json()
+        content: Dict[str, Any] = response.json()
 
         logger.info("Проверка на наличие необходимого ключа в ответе")
 
-        if content["status"] == "OK" and content["results"][0]["c"]:
-
+        if content.get("status") == "OK" and content.get("results") and content["results"][0].get("c"):
             logger.info("Необходимый ключ найден")
             logger.info("Получение результата и запись в словарь")
 
-            result = {"stock": stock, "price": round(content["results"][0]["c"], 2)}
+            return {"stock": stock, "price": round(content["results"][0]["c"], 2)}
 
-            return result
+        logger.error("Необходимый ключ не найден")
+        raise Exception("Нет данных о цене для данной акции.")
 
-        else:
-
-            logger.error("Необходимый ключ не найден")
-
-            raise Exception("Нет данных о цене для данной акции.")
-
-    else:
-
-        logger.error(f"Статус код не равен 200. Возможная ошибка: {response.reason}")
-
-        raise Exception(f"Запрос не был успешным. Возможная причина: {response.reason}")
+    logger.error(f"Статус код не равен 200. Возможная ошибка: {response.reason}")
+    raise Exception(f"Запрос не был успешным. Возможная причина: {response.reason}")

@@ -1,12 +1,12 @@
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 import pandas as pd
 
+from logging_config import setup_logging
 from settings import REPORTS_PATH
 from src.decorators import decorator_record_file
-from logging_config import setup_logging
 
 setup_logging()
 logger = logging.getLogger("my_log")
@@ -22,7 +22,6 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
     try:
         if not date:
             stop_date = datetime.now()
-
         else:
             stop_date = datetime.strptime(date, "%d.%m.%Y")
 
@@ -34,10 +33,8 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
 
         required_columns = ["Дата платежа", "Категория", "Сумма операции"]
         for column in required_columns:
-
             if column not in transactions.columns:
                 logger.error(f"Отсутствует необходимый столбец: {column}")
-
                 return pd.DataFrame()
 
         logger.info("Преобразование дат операций в объект datatime")

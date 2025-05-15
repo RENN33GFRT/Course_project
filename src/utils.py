@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Any, Dict, List, Tuple
 
 import pandas as pd
 
@@ -9,7 +10,7 @@ setup_logging()
 logger = logging.getLogger("my_log")
 
 
-def get_xlsx(file_path: str) -> tuple[list[dict], pd.DataFrame]:
+def get_xlsx(file_path: str) -> Tuple[List[Dict[str, Any]], pd.DataFrame]:
     """
     Функция, принимающая путь до Excel-файла и возвращающая список словарей и DataFrame.
     """
@@ -23,26 +24,26 @@ def get_xlsx(file_path: str) -> tuple[list[dict], pd.DataFrame]:
         if isinstance(df, pd.DataFrame) and not df.empty:
             logger.info("Данные корректны. Конвертация в словарь и возврат DataFrame")
             return df.to_dict(orient="records"), df
-        else:
-            logger.warning("Данные в файле отсутствуют или не являются DataFrame")
-            return [], pd.DataFrame()
+
+        logger.warning("Данные в файле отсутствуют или не являются DataFrame")
+        return [], pd.DataFrame()
 
     except FileNotFoundError:
         logger.warning("Файл по переданному пути отсутствует")
         return [], pd.DataFrame()
 
 
-def get_json_currencies(file_path: str) -> list:
+def get_json_currencies(file_path: str) -> List[str]:
     """
     Функция, принимающая путь к JSON файлу и возвращающая список данных из файла.
     """
-    result = []
+    result: List[str] = []
 
     try:
         logger.info("Попытка открыть JSON файл")
 
         with open(file_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            data: Dict[str, Any] = json.load(f)
 
             logger.info("Файл открыт успешно")
             logger.info("Проверка на наличие нужного ключа")
@@ -60,27 +61,24 @@ def get_json_currencies(file_path: str) -> list:
 
     except json.JSONDecodeError as ex:
         logger.error(f"Невозможно декодировать JSON данные из файла. Возможная причина: {ex}")
-
         raise ValueError(f"Ошибка при чтении файла: {ex}")
 
     except Exception as ex:
         logger.error(f"Невозможно получить необходимые данные Возможная ошибка: {ex}")
-
         raise Exception(f"Ошибка при чтении файла: {ex}")
 
 
-def get_json_stocks(file_path: str) -> list:
+def get_json_stocks(file_path: str) -> List[str]:
     """
     Функция, принимающая путь к JSON файлу и возвращающая список данных из файла.
     """
-    result = []
+    result: List[str] = []
 
     try:
-
         logger.info("Попытка открыть JSON файл")
 
         with open(file_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            data: Dict[str, Any] = json.load(f)
 
             logger.info("Файл открыт успешно")
             logger.info("Проверка на наличие нужного ключа")
@@ -94,14 +92,12 @@ def get_json_stocks(file_path: str) -> list:
             else:
                 logger.error("Ключ не найден")
 
-            return result
+        return result
 
     except json.JSONDecodeError as ex:
         logger.error(f"Невозможно декодировать JSON данные из файла. Возможная причина: {ex}")
-
         raise ValueError(f"Ошибка при чтении файла: {ex}")
 
     except Exception as ex:
         logger.error(f"Невозможно получить необходимые данные Возможная ошибка: {ex}")
-
         raise Exception(f"Ошибка при чтении файла: {ex}")

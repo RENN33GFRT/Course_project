@@ -11,7 +11,7 @@ from src.utils import get_json_currencies, get_json_stocks, get_xlsx
 from src.views import get_card_info, get_top_transactions, greetings, sort_by_date
 
 setup_logging()
-logger = logging.getLogger('external_api')
+logger = logging.getLogger("external_api")
 
 
 def views_main(date: str) -> str:
@@ -50,6 +50,6 @@ if __name__ == "__main__":
     operations_list, df = get_xlsx(EXCEL_PATH)
     my_date = (datetime.now()).strftime("%Y-%m-%d %H:%M:%S")
     json_main = views_main(my_date)
-    services_main = get_profitable_cashback_categories(operations_list, '2022', '04')
+    services_main = get_profitable_cashback_categories(operations_list, "2022", "04")
 
-    spending_by_category(df, 'Рестораны', '25.02.2024')
+    spending_by_category(df, "Рестораны", "25.02.2024")
